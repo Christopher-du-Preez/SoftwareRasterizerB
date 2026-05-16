@@ -1,7 +1,14 @@
 add_executable(${PROJECT_NAME} WIN32)
 target_sources(${PROJECT_NAME} 
     PRIVATE
-        main.c
+        core/main.c
+        core/render.c
+    PRIVATE    
+        FILE_SET HEADERS
+        BASE_DIRS
+            header
+        FILES
+            header/render.h
 )
 
 target_link_libraries(${PROJECT_NAME} 
