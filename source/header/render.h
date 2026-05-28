@@ -1,10 +1,13 @@
 #pragma once
 
-#define RED ((color_t){.r=255, .g=0, .b=0, a=255})
-#define GREEN ((color_t){.r=0, .g=255, .b=0, a=255})
-#define BLUE ((color_t){.r=00, .g=0, .b=255, a=255})
-#define WHITE ((color_t){.r=255, .g=255, .b=255, a=255})
-#define BLACK ((color_t){.r=0, .g=0, .b=0, a=255})
+#define RED (color_t){.r=255, .g=0, .b=0, .a=255}
+#define GREEN (color_t){.r=0, .g=255, .b=0, .a=255}
+#define BLUE (color_t){.r=00, .g=0, .b=255, .a=255}
+#define WHITE (color_t){.r=255, .g=255, .b=255, .a=255}
+#define BLACK (color_t){.r=0, .g=0, .b=0, .a=255}
+
+#define MIN(a, b) (( (a) < (b) ) ? a : b)
+#define MAX(a, b) (( (a) > (b) ) ? a : b)
 
 typedef struct color
 {

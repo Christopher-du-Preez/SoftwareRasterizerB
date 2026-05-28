@@ -1,7 +1,8 @@
 #include <app.h>
 #include <render.h>
+#include <stdio.h>
 
-handler_t handler = {0}
+handler_t handler = { 0 };
 
 uint8_t init()
 {
@@ -11,7 +12,7 @@ uint8_t init()
     }
     
     handler.window = SDL_CreateWindow("SoftwareRasterizerB", 640, 480, SDL_WINDOW_RESIZABLE);
-    if(!window){
+    if(!handler.window){
         SDL_Log("Failed to create window");
         return FALSE;
     }

@@ -1,3 +1,4 @@
+set(SDL_TESTS OFF)
 add_subdirectory(SDL)
 
 add_library(vendor INTERFACE)
