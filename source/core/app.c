@@ -101,23 +101,12 @@ LRESULT CALLBACK update(HWND hwnd, UINT32 msg, WPARAM w_param, LPARAM l_param)
 
 void run()
 {
-    uint32_t frames = 0, last_time = 0;
     while(handler.state){
-
-        uint32_t current_time = SDL_GetTicks();
 
         poll_event();
         render();
         InvalidateRect(handler.window, NULL, FALSE);
         UpdateWindow(handler.window);
-
-        frames++;
-        uint32_t deltaTime = SDL_GetTicks() - current_time;
-        if(current_time > last_time + 1000){
-            //PRINT("");
-            last_time = current_time;
-            frames = 0;
-        }
     }
 }
 
