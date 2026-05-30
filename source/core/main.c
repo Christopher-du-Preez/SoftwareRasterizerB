@@ -1,9 +1,12 @@
 #include <app.h>
 
-int main(void)
+int WINAPI WinMain(HINSTANCE h_instance, HINSTANCE p_instance, LPSTR lpCmdLine, int nCmdShow)
 {
-    init();
+    if (!init())
+    {
+        return -1;
+    }
     run();
-    shutdown();
+    shut();
     return 0;
 }

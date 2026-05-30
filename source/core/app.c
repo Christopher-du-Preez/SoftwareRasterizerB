@@ -1,61 +1,131 @@
 #include <app.h>
 #include <render.h>
-#include <stdio.h>
 
-handler_t handler = { 0 };
+handler_t handler;
 
 uint8_t init()
 {
-     if(!SDL_Init(SDL_INIT_VIDEO)){
-        SDL_Log("Failed to Initialize");
+    memset(&handler, 0, sizeof(handler));
+    
+    handler.h_instance = GetModuleHandle(0);
+    handler.state = TRUE; 
+
+    WNDCLASS wc;
+    memset(&wc, 0, sizeof(wc));
+    wc.lpfnWndProc = update;
+    wc.hInstance = handler.h_instance;
+    wc.lpszClassName = "main";
+    if (!RegisterClass(&wc))
+    {
         return FALSE;
     }
     
-    handler.window = SDL_CreateWindow("SoftwareRasterizerB", 640, 480, SDL_WINDOW_RESIZABLE);
-    if(!handler.window){
-        SDL_Log("Failed to create window");
+    handler.window = CreateWindowEx(
+        WS_EX_APPWINDOW,
+        wc.lpszClassName,
+        "SoftwareRasterizerB",
+        WS_OVERLAPPED | WS_SYSMENU,
+        CW_USEDEFAULT, CW_USEDEFAULT, WIDTH + BORDER_OFF_X, HEIGHT + BORDER_OFF_Y,
+        NULL,
+        NULL,
+        handler.h_instance,
+        NULL
+    );
+    if (!handler.window)
+        return FALSE;
+
+    handler.frame_buffer = calloc(sizeof(uint32_t), WIDTH * HEIGHT);
+    if (!handler.frame_buffer)
+    {
+        shut();
         return FALSE;
     }
-    handler.surface = SDL_GetWindowSurface(handler.window);   
+    handler.mem_dc = CreateCompatibleDC(NULL);
+    if (!handler.mem_dc)
+    {
+        shut();
+        return FALSE;
+    }
+
+    BITMAPINFO bi;
+    bi.bmiHeader.biSize = sizeof(bi.bmiHeader);
+    bi.bmiHeader.biWidth = WIDTH;
+    bi.bmiHeader.biHeight = -HEIGHT;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 32;
+    bi.bmiHeader.biCompression = BI_RGB;
+    handler.bitmap = CreateDIBSection(NULL, &bi, DIB_RGB_COLORS, &handler.frame_buffer, NULL, NULL);
+    if (!handler.bitmap)
+    {
+        shut();
+        return FALSE;
+    }
+    SelectObject(handler.mem_dc, handler.bitmap);
+    
+    ShowWindow(handler.window, SW_SHOW);
     
     return TRUE;
 }
 
-uint8_t poll_event(SDL_Event *event)
+void poll_event()
 {
-    while(SDL_PollEvent(event)){
-            if(event->type == SDL_EVENT_QUIT)
-                return FALSE;
-        }
-    return TRUE;
+    MSG msg;
+    while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+}
+
+LRESULT CALLBACK update(HWND hwnd, UINT32 msg, WPARAM w_param, LPARAM l_param)
+{
+    switch (msg)
+    {
+    case WM_DESTROY:
+    {
+        PostQuitMessage(0);
+        handler.state = FALSE;
+        return 0;
+    }
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        BeginPaint(handler.window, &ps);
+        BitBlt(ps.hdc, 0, 0, WIDTH, HEIGHT, handler.mem_dc, 0, 0, SRCCOPY);
+        EndPaint(handler.window, &ps);
+        return 0;
+    }
+    }
+    return DefWindowProc(hwnd, msg, w_param, l_param);
 }
 
 void run()
 {
-    uint64_t frames = 0, lastTime = 0;
-    while(TRUE){
+    uint32_t frames = 0, last_time = 0;
+    while(handler.state){
 
-        uint64_t currentTime = SDL_GetTicks();
+        uint32_t current_time = SDL_GetTicks();
 
-        if(!poll_event(&handler.event))
-            break;
+        poll_event();
         render();
+        InvalidateRect(handler.window, NULL, FALSE);
+        UpdateWindow(handler.window);
 
         frames++;
-        uint64_t deltaTime = SDL_GetTicks() - currentTime;
-        if(currentTime > lastTime + 1000){
-            lastTime = currentTime;
-            char sframes[40];
-            sprintf(sframes, "SoftwareRasterizerB FPS: %li", frames);
-            SDL_SetWindowTitle(handler.window, sframes);
+        uint32_t deltaTime = SDL_GetTicks() - current_time;
+        if(current_time > last_time + 1000){
+            //PRINT("");
+            last_time = current_time;
             frames = 0;
         }
     }
 }
 
-void shutdown()
+void shut()
 {
-    SDL_DestroySurface(handler.surface);
-    SDL_DestroyWindow(handler.window);
-    SDL_Quit();
+    if (handler.window)
+    {
+        DestroyWindow(handler.window);
+        handler.window = 0;
+    }
 }
