@@ -4,6 +4,7 @@ target_sources(${PROJECT_NAME}
         core/main.c
         core/render.c
         core/app.c
+        core/math_b.c
     PRIVATE    
         FILE_SET HEADERS
         BASE_DIRS
@@ -11,4 +12,5 @@ target_sources(${PROJECT_NAME}
         FILES
             header/render.h
             header/app.h
+            header/math_b.h
 )
