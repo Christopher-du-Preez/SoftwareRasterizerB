@@ -1,5 +1,6 @@
 #include <app.h>
 #include <render.h>
+#include <math_b.h>
 
 extern handler_t handler;
 
@@ -13,13 +14,6 @@ void render()
 }
 
 /*-----------Utils------------*/
-
-int32_t edge_cross(vec2_t a, vec2_t b, vec2_t c)
-{
-    vec2_t ab = { b.x - a.x, b.y - a.x };
-    vec2_t ac = { c.x - a.x, c.y - a.y };
-    return ab.x * ac.y - ac.x * ab.y;
-}
 
 /*-----------2D--------------*/
 
@@ -99,8 +93,4 @@ void draw_triangle(pixel_t *p0, pixel_t *p1, pixel_t *p2)
             }
         }
     }
-
-    draw_line(p0, p1);
-    draw_line(p1, p2);
-    draw_line(p2, p0);
 }

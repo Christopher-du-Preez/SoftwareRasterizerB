@@ -9,10 +9,10 @@
 #define MIN(a, b) (( (a) < (b) ) ? a : b)
 #define MAX(a, b) (( (a) > (b) ) ? a : b)
 
-typedef struct vector2
+typedef struct color
 {
-        int32_t x, y;
-} vec2_t;
+    uint8_t r, g, b, a;
+};
 
 typedef struct pixel
 {
@@ -25,4 +25,3 @@ void put_pixel(int32_t x, int32_t y, uint32_t color);
 void clear(uint32_t color);
 void draw_line(pixel_t *p0, pixel_t *p1);
 void draw_triangle(pixel_t *p0, pixel_t *p1, pixel_t *p2);
-int32_t edge_cross(vec2_t a, vec2_t b, vec2_t c);

@@ -20,6 +20,6 @@ typedef struct handler
 
 uint8_t init();
 void poll_event();
-LRESULT CALLBACK update(HWND hwnd, MSG msg, WPARAM w_param, LPARAM l_param);
+LRESULT CALLBACK win_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param);
 void run();
 void shut();
