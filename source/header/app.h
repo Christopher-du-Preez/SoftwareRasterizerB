@@ -12,6 +12,7 @@ typedef struct handler
 {
     HWND window;
     HINSTANCE h_instance;
+    HANDLE console;
     HDC mem_dc;
     HBITMAP bitmap;
     uint32_t *frame_buffer;

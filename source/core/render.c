@@ -1,22 +1,15 @@
 #include <app.h>
 #include <render.h>
 #include <math_b.h>
+#include <math.h>
+#include <stdio.h>
 
 extern handler_t handler;
 
-color_t red = { .r = 255, .g = 0,   .b = 0,   .a = 255 };
-color_t green = { .r = 0,   .g = 255, .b = 0,   .a = 255 };
-color_t blue = { .r = 0,   .g = 0,   .b = 255, .a = 255 };
-color_t white = { .r = 255, .g = 255, .b = 255, .a = 255 };
-color_t black = { .r = 0,   .g = 0,   .b = 0,   .a = 255 };
-
 void render()
 {
-    pixel_t p0 = { .x = 0, .y = 0, .color = red };
-    pixel_t p1 = { .x = 100, .y = 100, .color = green };
-    pixel_t p2 = { .x = 100, .y = -100, .color = blue };
-    clear(black);
-    draw_triangle(&p0, &p2, &p1);
+    clear(BLACK);
+    
 }
 
 /*-----------Utils------------*/
@@ -90,44 +83,60 @@ void draw_triangle(pixel_t *p0, pixel_t *p1, pixel_t *p2)
     vec2_t v1 = { p1->x, p1->y };
     vec2_t v2 = { p2->x, p2->y };
 
-    int32_t area = edge_cross(v0, v1, v2);
+    float min_y = floor(MIN(MIN(p0->y, p1->y), p2->y));
+    float min_x = floor(MIN(MIN(p0->x, p1->x), p2->x));
+    float max_y = ceil(MAX(MAX(p0->y, p1->y), p2->y));
+    float max_x = ceil(MAX(MAX(p0->x, p1->x), p2->x));
 
-    int32_t min_y = MIN(MIN(p0->y, p1->y), p2->y);
-    int32_t min_x = MIN(MIN(p0->x, p1->x), p2->x);
-    int32_t max_y = MAX(MAX(p0->y, p1->y), p2->y);
-    int32_t max_x = MAX(MAX(p0->x, p1->x), p2->x);
+    float area = edge_cross(v0, v1, v2);
 
-    int8_t bias0 = is_top_left(v0, v1) ? 0 : -1;
-    int8_t bias1 = is_top_left(v1, v2) ? 0 : -1;
-    int8_t bias2 = is_top_left(v2, v0) ? 0 : -1;
+    float delta_w0_col = v0.y - v1.y;
+    float delta_w1_col = v1.y - v2.y;
+    float delta_w2_col = v2.y - v0.y;
 
-    uint8_t inside = TRUE;
+    float delta_w0_row = v1.x - v0.x;
+    float delta_w1_row = v2.x - v1.x;
+    float delta_w2_row = v0.x - v2.x;
+
+    float bias0 = is_top_left(v0, v1) ? 0 : -0.5f;
+    float bias1 = is_top_left(v1, v2) ? 0 : -0.5f;
+    float bias2 = is_top_left(v2, v0) ? 0 : -0.5f;
+
+    vec2_t p = { min_x + 0.5f, min_y + 0.5f};
+
+    float w0_row = edge_cross(v0, v1, p) + bias0;
+    float w1_row = edge_cross(v1, v2, p) + bias1;
+    float w2_row = edge_cross(v2, v0, p) + bias2;
 
     for (int32_t y = min_y; y < max_y; y++)
     {
+        float w0 = w0_row;
+        float w1 = w1_row;
+        float w2 = w2_row;
         for (int32_t x = min_x; x < max_x; x++)
         {
-            vec2_t p = { x, y };
-
-            int32_t w0 = edge_cross(v0, v1, p) + bias0;
-            int32_t w1 = edge_cross(v1, v2, p) + bias1;
-            int32_t w2 = edge_cross(v2, v0, p) + bias2;
-
-            inside = (w0 >= 0) && (w1 >= 0) && (w2 >= 0);
+            uint8_t inside = (w0 >= 0) && (w1 >= 0) && (w2 >= 0);
 
             if (inside)
             {
-                color_t p_color = red;
-                float gamma = w0 / (float)area;
-                float beta = w1 / (float)area;
-                float alpha = w2 / (float)area;
+                color_t p_color = { 0 };
+                float gamma = w0 / area;
+                float beta  = w1 / area;
+                float alpha = w2 / area;
 
-                p_color.r = p0->color.r * gamma + p1->color.r * beta + p2->color.r * alpha;
-                p_color.g = p0->color.g * gamma + p1->color.g * beta + p2->color.g * alpha;
-                p_color.b = p0->color.b * gamma + p1->color.b * beta + p2->color.b * alpha;
+                p_color.a = 255;
+                p_color.r = p0->color.r * alpha + p1->color.r * beta + p2->color.r * gamma;
+                p_color.g = p0->color.g * alpha + p1->color.g * beta + p2->color.g * gamma;
+                p_color.b = p0->color.b * alpha + p1->color.b * beta + p2->color.b * gamma;
 
                 put_pixel(x, y, p_color);
             }
+            w0 += delta_w0_col;
+            w1 += delta_w1_col;
+            w2 += delta_w2_col;
         }
+        w0_row += delta_w0_row;
+        w1_row += delta_w1_row;
+        w2_row += delta_w2_row;
     }
 }

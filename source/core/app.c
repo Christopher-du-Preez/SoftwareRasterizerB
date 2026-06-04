@@ -11,6 +11,10 @@ uint8_t init()
     handler.h_instance = GetModuleHandle(0);
     handler.state = TRUE; 
 
+    AllocConsole();
+
+    handler.console = GetStdHandle(STD_OUTPUT_HANDLE);
+
     WNDCLASS wc;
     memset(&wc, 0, sizeof(wc));
     wc.lpfnWndProc = win_proc;
@@ -113,6 +117,7 @@ void run()
 
 void shut()
 {
+    FreeConsole();
     if (handler.window)
     {
         DestroyWindow(handler.window);
