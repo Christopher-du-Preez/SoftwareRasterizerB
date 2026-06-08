@@ -1,15 +1,30 @@
-#include <app.h>
 #include <render.h>
-#include <math_b.h>
 #include <math.h>
 #include <stdio.h>
 
-extern handler_t handler;
+uint32_t* frame_buffer = NULL;
+static uint32_t width = WIDTH;
+static uint32_t height = HEIGHT;
+vec2_t points[3];
+color_t colors[3];
+
+void render_init()
+{
+    points[0] = (vec2_t){0, 0 };
+    points[1] = (vec2_t){100, -100 };
+    points[2] = (vec2_t){ 100, 100 };
+
+    colors[0] = RED;
+    colors[0].val = 0.1f;
+    colors[1] = GREEN;
+    colors[1].val = 0.5f;
+    colors[2] = BLUE;
+}
 
 void render()
 {
     clear(BLACK);
-    
+    draw_triangle(points, colors);
 }
 
 /*-----------Utils------------*/
@@ -28,23 +43,23 @@ uint32_t color_to_int(color_t color)
 
 void clear(color_t color)
 {
-    size_t length = WIDTH * HEIGHT;
+    size_t length = width * height;
     for (size_t i = 0; i < length; i++)
     {
-        handler.frame_buffer[i] = color_to_int(color);
+        frame_buffer[i] = color_to_int(color);
     }
 }
 
 void put_pixel(int32_t x, int32_t y, color_t color)
 {
-    uint32_t new_x = WIDTH/2 + x;
-    uint32_t new_y = HEIGHT/2 - y;
-    if(new_x > WIDTH || new_y > HEIGHT)
+    uint32_t new_x = width/2 + x;
+    uint32_t new_y = height/2 - y;
+    if(new_x > width || new_y > height)
         return;
-    handler.frame_buffer[(WIDTH * new_y) + new_x] = color_to_int(color);
+    frame_buffer[(WIDTH * new_y) + new_x] = color_to_int(color);
 }
 
-void draw_line(pixel_t *p0, pixel_t *p1)
+void draw_line(vec2_t *p0, vec2_t *p1, color_t color)
 {
     int32_t dx = abs(p1->x - p0->x),
         dy = -abs(p1->y - p0->y),
@@ -54,8 +69,8 @@ void draw_line(pixel_t *p0, pixel_t *p1)
         y = p0->y,
         error = dx + dy;
     
-    while(TRUE){
-        put_pixel(x, y, p0->color);
+    while(1){
+        put_pixel(x, y, color);
         if(error*2 >= dy){
             if(x == p1->x)
                 break;
@@ -77,36 +92,32 @@ uint8_t is_top_left(vec2_t a, vec2_t b)
     return (edge.y == 0 && edge.x > 0) || edge.y < 0;
 }
 
-void draw_triangle(pixel_t *p0, pixel_t *p1, pixel_t *p2)
+void draw_triangle(vec2_t point[3], color_t color[3])
 {
-    vec2_t v0 = { p0->x, p0->y };
-    vec2_t v1 = { p1->x, p1->y };
-    vec2_t v2 = { p2->x, p2->y };
+    float min_y = floor(MIN(MIN(point[0].y, point[1].y), point[2].y));
+    float min_x = floor(MIN(MIN(point[0].x, point[1].x), point[2].x));
+    float max_y =  ceil(MAX(MAX(point[0].y, point[1].y), point[2].y));
+    float max_x =  ceil(MAX(MAX(point[0].x, point[1].x), point[2].x));
 
-    float min_y = floor(MIN(MIN(p0->y, p1->y), p2->y));
-    float min_x = floor(MIN(MIN(p0->x, p1->x), p2->x));
-    float max_y = ceil(MAX(MAX(p0->y, p1->y), p2->y));
-    float max_x = ceil(MAX(MAX(p0->x, p1->x), p2->x));
+    float area = edge_cross(point[0], point[1], point[2]);
 
-    float area = edge_cross(v0, v1, v2);
+    float delta_w0_col = point[0].y - point[1].y;
+    float delta_w1_col = point[1].y - point[2].y;
+    float delta_w2_col = point[2].y - point[0].y;
 
-    float delta_w0_col = v0.y - v1.y;
-    float delta_w1_col = v1.y - v2.y;
-    float delta_w2_col = v2.y - v0.y;
+    float delta_w0_row = point[1].x - point[0].x;
+    float delta_w1_row = point[2].x - point[1].x;
+    float delta_w2_row = point[0].x - point[2].x;
 
-    float delta_w0_row = v1.x - v0.x;
-    float delta_w1_row = v2.x - v1.x;
-    float delta_w2_row = v0.x - v2.x;
-
-    float bias0 = is_top_left(v0, v1) ? 0 : -0.5f;
-    float bias1 = is_top_left(v1, v2) ? 0 : -0.5f;
-    float bias2 = is_top_left(v2, v0) ? 0 : -0.5f;
+    float bias0 = is_top_left(point[0], point[1]) ? 0 : -0.5f;
+    float bias1 = is_top_left(point[1], point[2]) ? 0 : -0.5f;
+    float bias2 = is_top_left(point[2], point[0]) ? 0 : -0.5f;
 
     vec2_t p = { min_x + 0.5f, min_y + 0.5f};
 
-    float w0_row = edge_cross(v0, v1, p) + bias0;
-    float w1_row = edge_cross(v1, v2, p) + bias1;
-    float w2_row = edge_cross(v2, v0, p) + bias2;
+    float w0_row = edge_cross(point[0], point[1], p) + bias0;
+    float w1_row = edge_cross(point[1], point[2], p) + bias1;
+    float w2_row = edge_cross(point[2], point[0], p) + bias2;
 
     for (int32_t y = min_y; y < max_y; y++)
     {
@@ -124,10 +135,10 @@ void draw_triangle(pixel_t *p0, pixel_t *p1, pixel_t *p2)
                 float beta  = w1 / area;
                 float alpha = w2 / area;
 
-                p_color.a = 255;
-                p_color.r = p0->color.r * alpha + p1->color.r * beta + p2->color.r * gamma;
-                p_color.g = p0->color.g * alpha + p1->color.g * beta + p2->color.g * gamma;
-                p_color.b = p0->color.b * alpha + p1->color.b * beta + p2->color.b * gamma;
+                p_color.val =              color[0].val * beta + color[1].val * alpha + color[2].val * gamma;
+                p_color.r = p_color.val * (color[0].r   * beta + color[1].r   * alpha + color[2].r   * gamma);
+                p_color.g = p_color.val * (color[0].g   * beta + color[1].g   * alpha + color[2].g   * gamma);
+                p_color.b = p_color.val * (color[0].b   * beta + color[1].b   * alpha + color[2].b   * gamma);
 
                 put_pixel(x, y, p_color);
             }

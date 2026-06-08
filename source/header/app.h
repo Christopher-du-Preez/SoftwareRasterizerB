@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define HEIGHT 480
-#define WIDTH 640
 #define BORDER_OFF_Y 39
 #define BORDER_OFF_X 16
 
@@ -15,7 +13,6 @@ typedef struct handler
     HANDLE console;
     HDC mem_dc;
     HBITMAP bitmap;
-    uint32_t *frame_buffer;
     uint8_t state;
 } handler_t;
 

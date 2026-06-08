@@ -1,8 +1,8 @@
 #include <app.h>
 #include <render.h>
-#include <math_b.h>
 
 handler_t handler;
+extern uint32_t* frame_buffer;
 
 uint8_t init()
 {
@@ -39,8 +39,8 @@ uint8_t init()
     if (!handler.window)
         return FALSE;
 
-    handler.frame_buffer = calloc(sizeof(uint32_t), WIDTH * HEIGHT);
-    if (!handler.frame_buffer)
+    frame_buffer = calloc(sizeof(uint32_t), WIDTH * HEIGHT);
+    if (!frame_buffer)
     {
         shut();
         return FALSE;
@@ -59,7 +59,7 @@ uint8_t init()
     bi.bmiHeader.biPlanes = 1;
     bi.bmiHeader.biBitCount = 32;
     bi.bmiHeader.biCompression = BI_RGB;
-    handler.bitmap = CreateDIBSection(NULL, &bi, DIB_RGB_COLORS, &handler.frame_buffer, 0, 0);
+    handler.bitmap = CreateDIBSection(NULL, &bi, DIB_RGB_COLORS, &frame_buffer, 0, 0);
     if (!handler.bitmap)
     {
         shut();
@@ -106,6 +106,7 @@ LRESULT CALLBACK win_proc(HWND hwnd, UINT msg, WPARAM w_param, LPARAM l_param)
 
 void run()
 {
+    render_init();
     while(handler.state){
 
         poll_event();
