@@ -1,7 +1,9 @@
 #include <math_b.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
-float edge_cross(vec2_t a, vec2_t b, vec2_t c)
+float edge_cross(vec3_t a, vec3_t b, vec3_t c)
 {
     vec2_t ab = { b.x - a.x, b.y - a.y };
     vec2_t ac = { c.x - a.x, c.y - a.y };

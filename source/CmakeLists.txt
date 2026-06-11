@@ -5,6 +5,7 @@ target_sources(${PROJECT_NAME}
         core/render.c
         core/app.c
         core/math_b.c
+        core/my_models.c
     PRIVATE    
         FILE_SET HEADERS
         BASE_DIRS

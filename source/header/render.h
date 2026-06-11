@@ -23,14 +23,16 @@ typedef struct color
     float val;
 } color_t;
 
-typedef struct pixel
+typedef struct cube
 {
-        int32_t x, y;
-        color_t color;
-} pixel_t;
+    vec3_t vertices[8];
+    uint32_t faces[36];
+    vec3_t transform;
+} cube_t;
 
 void render();
 void put_pixel(int32_t x, int32_t y, color_t color);
 void clear(color_t color);
-void draw_line(vec2_t *p0, vec2_t *p1, color_t color);
-void draw_triangle(vec2_t point[3], color_t color[3]);
+void draw_line(vec3_t p0, vec3_t p1, color_t color);
+void draw_triangle(vec3_t v0, vec3_t v1, vec3_t v2, color_t color[3]);
+vec3_t project(vec3_t v);
